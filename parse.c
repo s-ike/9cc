@@ -21,8 +21,19 @@ static Node *new_node_num(int val)
 	return node;
 }
 
+static Node *new_var_node(char name)
+{
+	Node	*node;
+
+	node = calloc(1, sizeof(Node));
+	node->kind = ND_VAR;
+	node->name = name;
+	return node;
+}
+
 static Node *stmt(void);
 static Node *expr(void);
+static Node *assign(void);
 static Node *equality(void);
 static Node *relational(void);
 static Node *add(void);
@@ -30,6 +41,7 @@ static Node *mul(void);
 static Node *unary(void);
 static Node *primary(void);
 
+// program = stmt*
 Node *program(void)
 {
 	Node	head = {};
@@ -51,11 +63,23 @@ static Node *stmt(void)
 	return node;
 }
 
+// expr = assign
 static Node *expr(void)
 {
-	return equality();
+	return assign();
 }
 
+// assign = equality ("=" assign)?
+static Node *assign(void)
+{
+	Node	*node = equality();
+
+	if (consume("="))
+		node = new_node(ND_ASSIGN, node, assign());
+	return node;
+}
+
+// equality = relational ("==" relational | "!=" relational)*
 static Node *equality(void)
 {
 	Node	*node = relational();
@@ -71,6 +95,7 @@ static Node *equality(void)
 	}
 }
 
+// relational = add ("<" add | "<=" add | ">" add | ">=" add)*
 static Node *relational(void)
 {
 	Node	*node = add();
@@ -90,6 +115,7 @@ static Node *relational(void)
 	}
 }
 
+// add = mul ("+" mul | "-" mul)*
 static Node *add(void)
 {
 	Node	*node = mul();
@@ -105,6 +131,7 @@ static Node *add(void)
 	}
 }
 
+// mul = unary ("*" unary | "/" unary)*
 static Node *mul(void)
 {
 	Node	*node = unary();
@@ -120,6 +147,8 @@ static Node *mul(void)
 	}
 }
 
+// unary = ("+" | "-")? unary
+//       | primary
 static Node *unary(void)
 {
 	if (consume("+"))
@@ -130,6 +159,7 @@ static Node *unary(void)
 		return primary();
 }
 
+// primary = "(" expr ")" | ident | num
 static Node *primary(void)
 {
 	if (consume("("))
@@ -138,6 +168,9 @@ static Node *primary(void)
 		expect(")");
 		return node;
 	}
+	Token	*tok = consume_ident();
+	if (tok)
+		return new_var_node(*tok->str);
 	// 数値
 	return new_node_num(expect_number());
 }

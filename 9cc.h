@@ -16,6 +16,7 @@
 typedef enum
 {
 	TK_RESERVED,	// 記号
+	TK_INDENT,		// 識別子
 	TK_NUM,			// 整数トークン
 	TK_EOF,			// 入力の終わりを表すトークン
 } TokenKind;
@@ -34,6 +35,7 @@ struct Token
 void error(char *fmt, ...);
 void error_at(char *loc, char *fmt, ...);
 bool consume(char *op);
+Token *consume_ident(void);
 void expect(char *op);
 long expect_number();
 bool at_eof();
@@ -49,15 +51,17 @@ extern Token	*token;
 // 抽象構文木のノードの種類
 typedef enum
 {
-	ND_ADD,	// +
-	ND_SUB,	// -
-	ND_MUL,	// *
-	ND_DIV,	// /
-	ND_EQ,	// ==
-	ND_NE,	// !=
-	ND_LT,	// <
-	ND_LE,	// <=
-	ND_NUM,	// 数値
+	ND_ADD,		// +
+	ND_SUB,		// -
+	ND_MUL,		// *
+	ND_DIV,		// /
+	ND_EQ,		// ==
+	ND_NE,		// !=
+	ND_LT,		// <
+	ND_LE,		// <=
+	ND_ASSIGN,	// =
+	ND_VAR,		// Variable
+	ND_NUM,		// 数値
 } NodeKind;
 
 // 抽象構文木（AST）のノードの型
@@ -68,6 +72,7 @@ struct Node
 	Node		*next;	// 次のノード
 	Node		*lhs;	// 左辺
 	Node		*rhs;	// 右辺
+	char		name;	// kindがND_VARの場合のみ使用
 	long		val;	// kindがND_NUMの場合のみ使用
 };
 

@@ -46,6 +46,18 @@ bool consume(char *op)
 	return true;
 }
 
+// 次のトークンが変数のときには、トークンを1つ読み進めて
+// トークンを返す。それ以外の場合にはNULLを返す。
+Token *consume_ident(void)
+{
+	if (token->kind != TK_INDENT)
+		return NULL;
+
+	Token	*t = token;
+	token = token->next;
+	return t;
+}
+
 // 次のトークンが期待している記号のときには、トークンを1つ読み進める。
 // それ以外の場合にはエラーを報告する。
 void expect(char *op)
@@ -106,6 +118,12 @@ Token *tokenize(void)
 		if (isspace(*p))
 		{
 			p++;
+			continue;
+		}
+		// Identifier
+		if ('a' <= *p && *p <= 'z')
+		{
+			cur = new_token(TK_INDENT, cur, p++, 1);
 			continue;
 		}
 		// Multi-letter punctuator
