@@ -21,6 +21,8 @@ static Node *new_node_num(int val)
 	return node;
 }
 
+static Node *stmt(void);
+static Node *expr(void);
 static Node *equality(void);
 static Node *relational(void);
 static Node *add(void);
@@ -28,7 +30,28 @@ static Node *mul(void);
 static Node *unary(void);
 static Node *primary(void);
 
-Node *expr(void)
+Node *program(void)
+{
+	Node	head = {};
+	Node	*cur = &head;
+
+	while (!at_eof())
+	{
+		cur->next = stmt();
+		cur = cur->next;
+	}
+	return head.next;
+}
+
+static Node *stmt(void)
+{
+	Node	*node = expr();
+
+	expect(";");
+	return node;
+}
+
+static Node *expr(void)
 {
 	return equality();
 }

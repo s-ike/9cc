@@ -65,12 +65,13 @@ typedef struct Node Node;
 struct Node
 {
 	NodeKind	kind;	// ノードの型
+	Node		*next;	// 次のノード
 	Node		*lhs;	// 左辺
 	Node		*rhs;	// 右辺
 	long		val;	// kindがND_NUMの場合のみ使用
 };
 
-Node *expr(void);
+Node *program(void);
 
 //
 // Code generator
