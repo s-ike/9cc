@@ -13,23 +13,30 @@ static Var *find_var(Token *tok)
 	return NULL;
 }
 
-static Node *new_node(NodeKind kind, Node *lhs, Node *rhs)
+static Node *new_node(NodeKind kind)
 {
 	Node	*node;
 
 	node = calloc(1, sizeof(Node));
 	node->kind = kind;
+	return node;
+}
+
+static Node *new_binary(NodeKind kind, Node *lhs, Node *rhs)
+{
+	Node	*node;
+
+	node = new_node(kind);
 	node->lhs = lhs;
 	node->rhs = rhs;
 	return node;
 }
 
-static Node *new_node_num(int val)
+static Node *new_num(long val)
 {
 	Node	*node;
 
-	node = calloc(1, sizeof(Node));
-	node->kind = ND_NUM;
+	node = new_node(ND_NUM);
 	node->val = val;
 	return node;
 }
@@ -38,8 +45,7 @@ static Node *new_var_node(Var *var)
 {
 	Node	*node;
 
-	node = calloc(1, sizeof(Node));
-	node->kind = ND_VAR;
+	node = new_node(ND_VAR);
 	node->var = var;
 	return node;
 }
@@ -104,7 +110,7 @@ static Node *assign(void)
 	Node	*node = equality();
 
 	if (consume("="))
-		node = new_node(ND_ASSIGN, node, assign());
+		node = new_binary(ND_ASSIGN, node, assign());
 	return node;
 }
 
@@ -116,9 +122,9 @@ static Node *equality(void)
 	while (1)
 	{
 		if (consume("=="))
-			node = new_node(ND_EQ, node, relational());
+			node = new_binary(ND_EQ, node, relational());
 		else if (consume("!="))
-			node = new_node(ND_NE, node, relational());
+			node = new_binary(ND_NE, node, relational());
 		else
 			return node;
 	}
@@ -132,13 +138,13 @@ static Node *relational(void)
 	while (1)
 	{
 		if (consume("<"))
-			node = new_node(ND_LT, node, add());
+			node = new_binary(ND_LT, node, add());
 		else if (consume("<="))
-			node = new_node(ND_LE, node, add());
+			node = new_binary(ND_LE, node, add());
 		else if (consume(">"))
-			node = new_node(ND_LT, add(), node);
+			node = new_binary(ND_LT, add(), node);
 		else if (consume(">="))
-			node = new_node(ND_LE, add(), node);
+			node = new_binary(ND_LE, add(), node);
 		else
 			return node;
 	}
@@ -152,9 +158,9 @@ static Node *add(void)
 	while (1)
 	{
 		if (consume("+"))
-			node = new_node(ND_ADD, node, mul());
+			node = new_binary(ND_ADD, node, mul());
 		else if (consume("-"))
-			node = new_node(ND_SUB, node, mul());
+			node = new_binary(ND_SUB, node, mul());
 		else
 			return node;
 	}
@@ -168,9 +174,9 @@ static Node *mul(void)
 	while (1)
 	{
 		if (consume("*"))
-			node = new_node(ND_MUL, node, unary());
+			node = new_binary(ND_MUL, node, unary());
 		else if (consume("/"))
-			node = new_node(ND_DIV, node, unary());
+			node = new_binary(ND_DIV, node, unary());
 		else
 			return node;
 	}
@@ -182,10 +188,9 @@ static Node *unary(void)
 {
 	if (consume("+"))
 		return unary();
-	else if (consume("-"))
-		return new_node(ND_SUB, new_node_num(0), unary());
-	else
-		return primary();
+	if (consume("-"))
+		return new_binary(ND_SUB, new_num(0), unary());
+	return primary();
 }
 
 // primary = "(" expr ")" | ident | num
@@ -206,5 +211,5 @@ static Node *primary(void)
 		return new_var_node(var);
 	}
 	// 数値
-	return new_node_num(expect_number());
+	return new_num(expect_number());
 }
