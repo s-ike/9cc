@@ -1,6 +1,7 @@
 #ifndef __9CC_H__
 #define __9CC_H__
 
+#define _GNU_SOURCE
 #include <ctype.h>
 #include <stdarg.h>
 #include <stdbool.h>
@@ -48,6 +49,15 @@ extern Token	*token;
 // parse.c
 //
 
+// Local variable
+typedef struct Var Var;
+struct Var
+{
+	Var		*next;
+	char	*name;	// Variable name
+	int		offset;	// Offset from RBP
+};
+
 // 抽象構文木のノードの種類
 typedef enum
 {
@@ -72,7 +82,7 @@ struct Node
 	Node		*next;	// 次のノード
 	Node		*lhs;	// 左辺
 	Node		*rhs;	// 右辺
-	char		name;	// kindがND_VARの場合のみ使用
+	Var			*var;	// kindがND_VARの場合のみ使用
 	long		val;	// kindがND_NUMの場合のみ使用
 };
 

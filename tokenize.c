@@ -97,9 +97,19 @@ Token *new_token(TokenKind kind, Token *cur, char *str, int len)
 	return tok;
 }
 
-bool startswith(char *p, char *q)
+static bool startswith(char *p, char *q)
 {
 	return memcmp(p, q, strlen(q)) == 0;
+}
+
+static bool is_alpha(char c)
+{
+	return ('A' <= c && c <= 'Z') || ('a' <= c && c <= 'z') || c == '_';
+}
+
+static bool is_alnum(char c)
+{
+	return is_alpha(c) || ('0' <= c && c <= '9');
 }
 
 // 入力文字列user_inputをトークナイズしてそれを返す
@@ -121,9 +131,12 @@ Token *tokenize(void)
 			continue;
 		}
 		// Identifier
-		if ('a' <= *p && *p <= 'z')
+		if (is_alpha(*p))
 		{
-			cur = new_token(TK_INDENT, cur, p++, 1);
+			char	*q = p++;
+			while (is_alnum(*p))
+				p++;
+			cur = new_token(TK_INDENT, cur, q, p - q);
 			continue;
 		}
 		// Multi-letter punctuator

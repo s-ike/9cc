@@ -1,5 +1,18 @@
 #include "9cc.h"
 
+// All local variable instances created during parsing are
+// accumulated to this list.
+Var	*locals;
+
+// Find a local variable by name.
+static Var *find_var(Token *tok)
+{
+	for (Var *var = locals; var; var = var->next)
+		if (strlen(var->name) == tok->len && !strncmp(tok->str, var->name, tok->len))
+			return var;
+	return NULL;
+}
+
 static Node *new_node(NodeKind kind, Node *lhs, Node *rhs)
 {
 	Node	*node;
@@ -21,14 +34,29 @@ static Node *new_node_num(int val)
 	return node;
 }
 
-static Node *new_var_node(char name)
+static Node *new_var_node(Var *var)
 {
 	Node	*node;
 
 	node = calloc(1, sizeof(Node));
 	node->kind = ND_VAR;
-	node->name = name;
+	node->var = var;
 	return node;
+}
+
+static Var *new_lvar(char *name)
+{
+	Var	*var;
+
+	var = calloc(1, sizeof(Var));
+	var->next = locals;
+	var->name = name;
+	if (locals)
+		var->offset = locals->offset + 8;
+	else
+		var->offset = 8;
+	locals = var;
+	return var;
 }
 
 static Node *stmt(void);
@@ -47,6 +75,7 @@ Node *program(void)
 	Node	head = {};
 	Node	*cur = &head;
 
+	locals = NULL;
 	while (!at_eof())
 	{
 		cur->next = stmt();
@@ -170,7 +199,12 @@ static Node *primary(void)
 	}
 	Token	*tok = consume_ident();
 	if (tok)
-		return new_var_node(*tok->str);
+	{
+		Var	*var = find_var(tok);
+		if (!var)
+			var = new_lvar(strndup(tok->str, tok->len));
+		return new_var_node(var);
+	}
 	// 数値
 	return new_node_num(expect_number());
 }
