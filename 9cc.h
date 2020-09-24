@@ -70,6 +70,7 @@ typedef enum
 	ND_LT,		// <
 	ND_LE,		// <=
 	ND_ASSIGN,	// =
+	ND_RETURN,	// "return"
 	ND_VAR,		// Variable
 	ND_NUM,		// 数値
 } NodeKind;
